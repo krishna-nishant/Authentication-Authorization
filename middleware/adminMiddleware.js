@@ -1,5 +1,5 @@
 const adminMiddleware = (req, res, next) => {
-    const { role } = req.user
+    const { role } = req.userInfo
     if (role !== 'admin') {
         return res.status(401).json({
             success: false, message: "Access denied. You are not an admin"
@@ -10,4 +10,4 @@ const adminMiddleware = (req, res, next) => {
     // })
     next()
 }
-module.exports=adminMiddleware
+module.exports = adminMiddleware

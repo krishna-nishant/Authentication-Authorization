@@ -1,0 +1,1 @@
+everything about authentication, role based authorization, jwt tokens, file upload, cloudinary, multer
