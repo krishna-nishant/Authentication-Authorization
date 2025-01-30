@@ -1,5 +1,6 @@
 const Image = require('../models/images')
-const uploadToCloudinary = require('../helper/cloudinary')
+const uploadToCloudinary = require('../helper/cloudinary');
+const cloudinary = require('../config/cloudinary');
 
 const uploadImage = async (req, res) => {
     try {
@@ -75,4 +76,36 @@ const getImage = async (req, res) => {
     }
 }
 
-module.exports = { uploadImage, getImage }
+const deleteImage = async (req, res) => {
+    try {
+        const imageId = req.params.id;
+
+        const getCurrentImageDetails = await Image.findById(imageId)
+        if (!getCurrentImageDetails) {
+            return res.status(401).json({
+                success: false,
+                message: "Image not found"
+            })
+        }
+
+        // delete from cloudinary
+        await cloudinary.uploader.destroy(getCurrentImageDetails.publicId)
+
+        // delete from MongoDB
+        await Image.findByIdAndDelete(imageId)
+
+        return res.status(200).json({
+            success: true,
+            message: "Image deleted successfully"
+        })
+        
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({
+            message: "Internal server error",
+            success: false
+        })
+    }
+}
+
+module.exports = { uploadImage, getImage, deleteImage }
