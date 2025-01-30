@@ -1,9 +1,8 @@
 const User = require('../models/index.js')
 const bcrypt = require('bcryptjs')
-const jwt=require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
 const registerUser = async (req, res) => {
-
     try {
         const { username, email, password, role } = req.body
         if (!username || !email || !password) {
@@ -53,7 +52,6 @@ const registerUser = async (req, res) => {
 }
 
 const loginUser = async (req, res) => {
-
     try {
         const { username, password } = req.body
         if (!username || !password) {
@@ -100,4 +98,44 @@ const loginUser = async (req, res) => {
     }
 }
 
-module.exports = { registerUser, loginUser }
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.userInfo.userId
+        const { oldPassword, newPassword } = req.body
+
+        const getCurrentUserDetails = await User.findById(userId)
+        if (!getCurrentUserDetails) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        const checkValidPassword = await bcrypt.compare(oldPassword, getCurrentUserDetails.password)
+        if (!checkValidPassword) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid old password"
+            })
+        }
+
+        const salt = await bcrypt.genSalt(10)
+        const hashedNewPassword = await bcrypt.hash(newPassword, salt)
+        getCurrentUserDetails.password = hashedNewPassword
+        await getCurrentUserDetails.save()
+
+        res.status(200).json({
+            success: true,
+            message: "Password changed successfully",
+            data: getCurrentUserDetails
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: `Internal Server Error -> ${error.message}`
+        })
+    }
+}
+
+module.exports = { registerUser, loginUser, changePassword }
