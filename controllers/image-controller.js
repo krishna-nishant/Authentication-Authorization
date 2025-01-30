@@ -79,12 +79,20 @@ const getImage = async (req, res) => {
 const deleteImage = async (req, res) => {
     try {
         const imageId = req.params.id;
+        const getUserId = req.userInfo.userId
 
         const getCurrentImageDetails = await Image.findById(imageId)
         if (!getCurrentImageDetails) {
             return res.status(401).json({
                 success: false,
                 message: "Image not found"
+            })
+        }
+
+        if (getCurrentImageDetails.uploadedBy.toString() !== getUserId) {
+            return res.status(401).json({
+                success: false,
+                message: "You are not authorized to delete this image"
             })
         }
 
@@ -98,7 +106,7 @@ const deleteImage = async (req, res) => {
             success: true,
             message: "Image deleted successfully"
         })
-        
+
     } catch (error) {
         console.log(error.message);
         res.status(500).json({
